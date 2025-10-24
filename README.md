@@ -70,7 +70,7 @@ Explanation
 ```
 positional arguments:
   input                 Path of the input protein fasta file
-  model                 Path of the model parameter file
+  model                 Path of the model parameter file (From https://zenodo.org/records/12759619/files/PIDE.model.tar.gz)
 
 options:
   -h, --help            show this help message and exit
@@ -81,6 +81,18 @@ options:
                         Define the batch size used in the prediction
 ```
 
+Example commands:
+
+Input proteins in 'test.fasta', model in 'esm650_4layer.ckpt', save the results to 'results.txt', batch size is 16.
+
+CPU: `python FEMPBP/run.py test.fasta esm650_4layer.ckpt -o results.txt -b 16`
+
+single GPU machine: `python FEMPBP/run.py test.fasta esm650_4layer.ckpt -o results.txt -g 0 -b 16` 
+
+multi GPU machine, using one GPU (ID:2): `python FEMPBP/run.py test.fasta esm650_4layer.ckpt -o results.txt -g 2 -b 16` 
+
+multi GPU machine, using eight GPUs (ID:0-7): `python FEMPBP/run.py test.fasta esm650_4layer.ckpt -o results.txt -g 0,1,2,3,4,5,6,7 -b 16` 
+
 ### Output file (Default is ./results.txt)
 
    This txt file lists the predicted results of all input proteins (seperated by TAB'\t')
@@ -90,3 +102,16 @@ options:
    **phage_prob**: The probability for a protein to be a phage protein
 
    **predict_result**: The predicted result ("Bacterium"/"Phage" proteins)
+
+### Recommended "batch size"
+
+Here are the recommended "batch size" for different single GPU. However, please note that since all tests were conducted on a 48GB NVIDIA A40, it may not be that accurate. It is recommended to test it again by yourself.
+
+| BATCH SIZE | GPU memory  | GPU type        |
+|------------|-------------|-----------------|
+| 32         | 12217MB     |                 |
+| 64         | 18857MB     | 3090/4090 24GB  |
+| 96         | 25497MB     | V100/5090 32GB  |
+| 128        | 32137MB     |                 |
+| 160        | 38777MB     | A100 40GB       |
+| 192        | 45417MB     | A40 48GB        |

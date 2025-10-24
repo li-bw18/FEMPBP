@@ -66,21 +66,24 @@ for seq_record in SeqIO.parse(args.input, "fasta"):
 total_group = int((len(data)-1) / args.BatchSize) + 1
 
 result = []
-for i in range(total_group):
-    if i == (total_group-1):
-        new_group = data[(i*args.BatchSize):]
-    else:
-        new_group = data[(i*args.BatchSize):((i+1)*args.BatchSize)]
-    inputs = batch_converter(new_group)[2]
-    if inputs.shape[1] > 1024:
-        inputs = inputs[:, :1024]
-    inputs = inputs.to(device)
-    predicts = F.softmax(esmorf(inputs),1).cpu().detach().numpy()
-    for j in range(len(predicts)):
-        if predicts[j, 1] >= 0.5:
-            result.append((new_group[j][0], predicts[j, 1], 'Phage'))
+
+with torch.no_grad():
+    esmorf = esmorf.eval()
+    for i in range(total_group):
+        if i == (total_group-1):
+            new_group = data[(i*args.BatchSize):]
         else:
-            result.append((new_group[j][0], predicts[j, 1], 'Bacterium'))
+            new_group = data[(i*args.BatchSize):((i+1)*args.BatchSize)]
+        inputs = batch_converter(new_group)[2]
+        if inputs.shape[1] > 1024:
+            inputs = inputs[:, :1024]
+        inputs = inputs.to(device)
+        predicts = F.softmax(esmorf(inputs),1).cpu().detach().numpy()
+        for j in range(len(predicts)):
+            if predicts[j, 1] >= 0.5:
+                result.append((new_group[j][0], predicts[j, 1], 'Phage'))
+            else:
+                result.append((new_group[j][0], predicts[j, 1], 'Bacterium'))
 
 with open(args.output, 'w') as f:
     f.write('seq_id\tphage_prob\tpredict_result\n')
